@@ -1,18 +1,30 @@
 # Introduction
-The goal of this project is to propose a solution to the C++ test I was asking the candidates to write. Once the code skeletton started, I wanted to develop more and more some components, such as the data manager.
- 
-## Requirements
+The goal of this project is to propose a multi-feeder multi-consumer data management framework. 
 
-The system represents a V2X (Vehicle to Everything) end-point. It is embedded in a car and receives data from other cars through V2X messages.
-- TCP Server : Manage the connections with the remote TCP Clients and handle data
-- Data Manager: Multi-feeder / multi-consumer message queuing / dispatching template class
-- Calculator: 
+```mermaid
+flowchart LR
+ id1(Feeder1) & id2(Feeder N) --> id3(Proxy) --> id4(Data Manager) --> Proxy
+ Proxy --> id11(Consumer 1)
+ Proxy --> id12(Consumer N)
+```
 
 ## Architecture
 
 ### Proxy 
+The proxy implements / will implement several classes that can be used as interface with the Feeders: 
+
+* TCPServer
+* UDP 
+* Local
+* Bypass
 
 ### Data Manager
+
+The data manager buffers the data and handles its forwarding from the feeders to the consumers. There are 3 modes:
+
+* Broadcast mode : every data fed at the input is broadcast to all the consumers
+* Known map: a route is defined between the consumers and the feeders
+* Topic Map
 
 # Build
 ```
@@ -20,3 +32,4 @@ mkdir build && cd build
 cmake ..
 make
 ```
+
