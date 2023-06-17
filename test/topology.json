@@ -1,0 +1,22 @@
+{
+  "dataManager" : {
+    "name" : "dm",
+    "threadCount" : 8,
+    "mode" : "broadcast"
+  },
+  "inProxy" : [{
+          "type" : "TCP",
+          "port" : "50000",
+          "name" : "TcpServer1"
+      },
+      {
+          "type" : "TCP",
+          "port" : "80",
+          "name" : "TcpServer2"
+      },{
+          "type" : "file",
+          "port" : "/tmp/test",
+          "name" : "localfilereader"
+      }
+  ]
+}
