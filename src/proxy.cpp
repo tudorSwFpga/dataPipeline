@@ -10,13 +10,21 @@
 #include "../include/threadPool.hpp"
 #include "../include/tcp.hpp"
 #include "../include/runnable.hpp"
+#include "../include/consumer.hpp"
 
 //tcp proxy
 bool Proxy::addNode(ProxyType type,const uint16_t& port,const std::string& name){
 	//create tcp server
 	ProxyNode* node;
-	if (type == TCP){
-		node = new TcpServer(name,port,m_dataHandler);
+	switch (type) {
+		case TCP:
+			node = new TcpServer(name,port,m_dataHandler);
+			break;
+		case CONSUMER:
+			node = new Consumer(name,port,m_dataHandler);
+			break;
+		default:
+			throw std::runtime_error("Unknown type of node");
 	}
 	std::unique_lock<std::mutex> lk(m_proxyListMutex);
 	m_proxyNodeList.push_back(node);
@@ -40,7 +48,11 @@ void Proxy::run(){
 }
 
 void Proxy::stop(){
-	//TODO: do something here
+	for (auto it:m_proxyNodeList){
+		std::function<void()> runProxy = [it](){ it->run();};
+		m_tp->QueueJob(it->m_name,runProxy);
+	}
+	m_isRunning = false;
 }
 
 Proxy::ProxyType Proxy::getProxyType(const std::string& type){
@@ -50,6 +62,8 @@ Proxy::ProxyType Proxy::getProxyType(const std::string& type){
         return Proxy::ProxyType::UDP;
     } else if (type.compare("CUSTOM") == 0){
         return Proxy::ProxyType::CUSTOM;
+    } else if (type.compare("CONSUMER") == 0){
+        return Proxy::ProxyType::CONSUMER;
     } else {
         throw std::runtime_error("Unknown type of proxy, " + type);
     }
