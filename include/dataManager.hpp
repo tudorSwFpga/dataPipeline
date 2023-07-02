@@ -73,6 +73,7 @@ public:
 
 	
 	void  run();
+	void  stop();
 
 
 private:
@@ -84,7 +85,7 @@ private:
 	uint8_t m_maxNbOutQueues;
 	MODE m_mode;
 
-
+	bool m_isRunning;
 	std::vector<std::queue<T>> m_inQueues;
 	std::vector<std::queue<T>> m_outQueues;
 

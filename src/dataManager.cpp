@@ -24,6 +24,7 @@ bool DataManager<T>::setConf(const uint8_t& inQueues,const uint8_t& outQueues,co
 
 template<class T>
 void DataManager<T>::run(){
+	m_isRunning = true;
 	if (m_mode == BROADCAST) {
 		PLOG_DEBUG << " Manage data in broadcast mode";
 		DataManager::manageBroadcast();
@@ -32,14 +33,25 @@ void DataManager<T>::run(){
 	}
 }
 
+template<class T>
+void DataManager<T>::stop(){
+	PLOG_DEBUG << " Stopping...";
+	m_isRunning = false;
+	m_condVarIn.notify_all();
+
+}
+
+
 /*
 check each input queue status and copy on every output queue
 */
 template<class T>
 void DataManager<T>::manageBroadcast(){
-	std::unique_lock<std::mutex> lk(m_inQueuesMutex);
 	PLOG_DEBUG << " Waiting...";
-	m_condVarIn.wait(lk);
+	std::unique_lock<std::mutex> lk(m_inQueuesMutex);
+	m_condVarIn.wait(lk, [this] {
+		return m_isRunning == false;
+	} );
 	T data;
 	for (auto &it:m_inQueues){
 		if (!it.empty()){	

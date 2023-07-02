@@ -19,7 +19,6 @@ public:
     void start();
     void QueueJob(const std::string& jobName,const std::function<void()>& job);
     void stop();
-    bool busy();
 
 private:
     void ThreadLoop();

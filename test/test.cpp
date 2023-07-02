@@ -14,11 +14,12 @@ int main(){
 	DataFramework example(conf);
 	PLOG_INFO << "Starting System";
 	example.start();
-	example.run();
-
+	std::cout << '\n' << "Press a key to stop...";
 	do {
-   		std::cout << '\n' << "Press a key to continue...";
+		example.run();	
+		usleep(500000);    
  	} while (std::cin.get() != '\n');
+ 	example.stop();
 
 	return 0;
 }
