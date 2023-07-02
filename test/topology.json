@@ -18,5 +18,16 @@
           "port" : "/tmp/test",
           "name" : "localfilereader"
       }
+  ],
+  "outProxy" : [{
+          "type" : "CONSUMER",
+          "port" : "0",
+          "name" : "Consumer1"
+      },
+      {
+          "type" : "CONSUMER",
+          "port" : "1",
+          "name" : "Consumer2"
+      }
   ]
 }

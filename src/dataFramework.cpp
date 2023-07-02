@@ -53,6 +53,21 @@ bool DataFramework::parseConf(){
                 m_inProxyPtr->addNode(type,port,name);
             }
         }
+
+        //create output proxy, if any
+        auto outP = m_pt.get_child_optional("outProxy");
+        if (outP){
+            m_outProxyPtr = std::make_unique<Proxy>(m_threadPoolPtr);
+            for (const auto &proxy : m_pt.get_child("outProxy")){
+                m_outProxyPtr->addHandler(*dmName);
+                Proxy::ProxyType type=Proxy::getProxyType(proxy.second.get<std::string>("type"));
+                std::string name=proxy.second.get<std::string>("name");
+                uint16_t port =(uint16_t)proxy.second.get<int>("port");
+                PLOG_DEBUG << "Add out proxy node, " << name;
+
+                m_outProxyPtr->addNode(type,port,name);
+            }
+        }
     }
     
     catch (std::exception const& e) {
@@ -66,25 +81,27 @@ bool DataFramework::parseConf(){
 //spread the jobs on N threads
 void DataFramework::start(){
     m_threadPoolPtr->start();
-    //add all the jobs in the queue
     m_inProxyPtr->start();
     m_isRunning = true;
+    std::function<void()> runDataManager = [this]() {
+        while (m_isRunning)
+            {
+                m_dataManager->run();
+            }
+    };
+    m_threadPoolPtr->QueueJob("DataManager",runDataManager);
 }
 
 
 //spread the jobs on N threads
 void DataFramework::run(){
-    while (m_isRunning){
+    if (m_isRunning){
         m_inProxyPtr->run();
-        std::function<void()> runDataManager = std::bind(&DataManager<std::string>::run,m_dataManager);
-        m_threadPoolPtr->QueueJob("DataManager",runDataManager);
-        usleep(200000);    
     }
 }
 
 void DataFramework::stop(){
-    if (m_isRunning){
-        m_threadPoolPtr->stop();
         m_isRunning = false;
-    } 
+        m_dataManager -> stop();
+        m_threadPoolPtr->stop();
 }

@@ -38,6 +38,7 @@ public:
 	enum ProxyType {
 		TCP,
 		UDP,
+		CONSUMER,
 		CUSTOM,
 		UNKNOWN
 	};

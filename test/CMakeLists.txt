@@ -17,6 +17,7 @@ target_sources(testFramework
         "../src/proxy.cpp"
         "../src/tcp.cpp"
         "../src/threadPool.cpp"
+        "../include/consumer.hpp"
     )
 
 target_include_directories(testFramework PUBLIC "../include")
