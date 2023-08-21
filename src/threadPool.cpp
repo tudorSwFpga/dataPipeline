@@ -46,16 +46,6 @@ void ThreadPool::QueueJob(const std::string& jobName,const std::function<void()>
 }
 
 
-bool ThreadPool::busy() {
-    bool poolbusy;
-    {
-        std::unique_lock<std::mutex> lock(queue_mutex);
-        poolbusy = jobs.empty();
-    }
-    return poolbusy;
-}
-
-
 void ThreadPool::stop() {
     {
         std::unique_lock<std::mutex> lock(queue_mutex);
