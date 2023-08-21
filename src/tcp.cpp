@@ -60,6 +60,7 @@ void TcpServer::manageConnections(){
 		std::lock_guard<std::mutex> guard(m_connectedClientsMutex);
 		m_connectedClientsFds.push_back(fd);
 	}
+	delete clientAddr;
 }
 
 /* Poll the list of sockets.
