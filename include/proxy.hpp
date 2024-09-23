@@ -21,52 +21,36 @@
 #ifndef PROXY_H
 #define PROXY_H
 
-
-class Proxy:public Runnable
-{
+class Proxy : public Runnable {
 public:
+    Proxy(std::shared_ptr<ThreadPool> tp) : m_tp(tp) {
+        PLOG_DEBUG << " Proxy Ctor";
+    };
+    ~Proxy() {
+        PLOG_DEBUG << " Proxy Dtor";
+    };
 
-	Proxy(std::shared_ptr<ThreadPool> tp):m_tp(tp){
-		PLOG_DEBUG << " Proxy Ctor";
+    enum ProxyType { TCP, UDP, CONSUMER, CUSTOM, UNKNOWN };
 
-	};
-	~Proxy(){
-		PLOG_DEBUG << " Proxy Dtor";
+    bool addHandler(const std::string &name);
+    bool addNode(ProxyType type, const uint16_t &port, const std::string &name);
+    bool remNode(ProxyType type, const uint16_t &port, const std::string &name);
 
-	};	
+    void run();
+    void stop();
 
-	enum ProxyType {
-		TCP,
-		UDP,
-		CONSUMER,
-		CUSTOM,
-		UNKNOWN
-	};
-
-	
-
-	bool addHandler(const std::string& name);
-	bool addNode(ProxyType type,const uint16_t& port,const std::string& name);
-	bool remNode(ProxyType type,const uint16_t& port,const std::string& name);
-
-	void run();
-	void stop();
-
-	static ProxyType getProxyType(const std::string& type);
-
-
+    static ProxyType getProxyType(const std::string &type);
 
 private:
+    struct ProxyConf {
+        ProxyType m_type;
+        const uint16_t m_port;
+        const std::string m_name;
+    };
 
-	struct ProxyConf{
-		ProxyType m_type;
-		const uint16_t m_port;
-		const std::string m_name;
-	};
-
-	DataManager<std::string>* m_dataHandler;
-	std::vector<ProxyNode*> m_proxyNodeList;
-	std::shared_ptr<ThreadPool> m_tp;
+    DataManager<std::string> *m_dataHandler;
+    std::vector<ProxyNode *> m_proxyNodeList;
+    std::shared_ptr<ThreadPool> m_tp;
     std::mutex m_proxyListMutex;
 };
 
