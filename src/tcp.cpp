@@ -5,129 +5,164 @@
 #include <poll.h>
 #include <unistd.h>
 #include <plog/Log.h>
+#include <mutex>
 #include "../include/tcp.hpp"
+#include "../include/utils.hpp"
 
-int TcpServer::createSocket(){
-	PLOG_INFO << " Create socket ";
-
-	int sockfd = socket(AF_INET, SOCK_STREAM, 0);
-	PLOG_INFO << " Create socket 2, port " << m_port;
-
-	if (sockfd < 0) {
+/**
+ * @return
+ */
+int TcpServer::createListenSocket() {
+    int sockfd = socket(AF_INET, SOCK_STREAM, 0);
+    if (sockfd < 0) {
         throw std::runtime_error(std::strerror(errno));
     }
 
-	memset(&m_Address,0,sizeof(sockaddr_in)); //init address to 0
-	m_Address.sin_family = AF_INET; //set ip socket
-	m_Address.sin_port = htons(m_port);
-	m_Address.sin_addr.s_addr = INADDR_ANY;
-
-	if (bind(sockfd, (struct sockaddr *) &m_Address, sizeof(sockaddr_in)) < 0){
-		throw std::runtime_error(std::string("Cannot bind to asked port ") + std::string(std::strerror(errno)));
-	}
-
-	listen(sockfd,BACKLOG);
-	PLOG_INFO << " Socket created; Listening on port: " << m_port;
-
-
-	return sockfd;
+    // init address to 0
+    memset(&m_Address, 0, sizeof(sockaddr_in));
+    // set ip socket type
+    m_Address.sin_family = AF_INET;
+    // bind port on any ip address
+    m_Address.sin_port        = htons(m_port);
+    m_Address.sin_addr.s_addr = inet_addr("127.0.0.1");
+    if (bind(sockfd, (struct sockaddr *)&m_Address, sizeof(sockaddr_in)) < 0) {
+        throw std::runtime_error(std::string("Cannot bind to asked port ") + std::string(std::strerror(errno)));
+    }
+    listen(sockfd, BACKLOG);
+    spdlog::info(" Socket created; Listening on port: {} ", m_port);
+    return sockfd;
 }
 
-void TcpServer::run(){
-	PLOG_DEBUG << " Running";
-	manageConnections();
-	receiveData();
+void TcpServer::run() {
+    acceptConnectionReq();
+    checkRx();
 }
 
-/*  Manage TCP Connections
-- accept clients that want to establish connection
-- store their File Descriptors in a list
-- remove File descriptors from list when connections are closed
-- close connections when TCP server is closed
-*/
-void TcpServer::manageConnections(){
-	PLOG_DEBUG << " Manage Connections";
-	using namespace std::chrono_literals;
-	sockaddr* clientAddr = new sockaddr();
-	socklen_t socketSize = sizeof(socklen_t);
-	int flags = fcntl(m_sockfd,F_GETFL,0);
-	fcntl(m_sockfd, F_SETFL, flags | O_NONBLOCK);
-	const int fd = accept(m_sockfd, clientAddr,&socketSize);
-	if (fd < 0)
-		PLOG_DEBUG << " No client connection request pending";
-	else{
-		PLOG_INFO << " Accepted new connection with : " <<  getPeerIp(clientAddr) << " : " << getPeerPort(clientAddr);
-		std::lock_guard<std::mutex> guard(m_connectedClientsMutex);
-		m_connectedClientsFds.push_back(fd);
-	}
-	delete clientAddr;
+/**
+ *  Accept TCP Connections
+ *  Query if there are clients that want to establish connection through accept syscall
+ *  Store their File Descriptors in a vector
+ */
+void TcpServer::acceptConnectionReq() {
+    std::cout << "Running TCP server" << std::endl;
+    sockaddr *clientAddr = new sockaddr();
+    socklen_t socketSize = sizeof(socklen_t);
+    Utils::setSyscallNonblock(m_sockfd);
+    const int fd = accept(m_sockfd, clientAddr, &socketSize);
+    if (fd < 0)
+        spdlog::debug(" No client connection request pending \n");
+    else {
+        std::lock_guard<std::mutex> lock(m_connectedClientsMutex);
+        m_connectedClientsFds.push_back(fd);
+        spdlog::info("Fd {} Accepted new connection with {} : {}", fd, getPeerIp(fd), getPeerPort(fd));
+    }
+    delete clientAddr;
+}
+
+/** TODO
+ *  remove File descriptors from list when connections are closed
+ *  close connections when TCP server is closed
+ */
+void TcpServer::remConnectedClient(int fd) {
+    spdlog::debug("Removing client");
+    std::lock_guard<std::mutex> lock(m_connectedClientsMutex);
+    m_connectedClientsFds.remove(fd);
+}
+
+/* On success, poll() returns a nonnegative value which is the
+       number of elements in the pollfds whose revents fields have been
+       set to a nonzero value (indicating an event or an error).  A
+       return value of zero indicates that the system call timed out
+       before any file descriptors became read.
+    */
+int TcpServer::pollFds(pollfd *fds) {
+    int ret;
+    fdToPollFdArray(fds);
+    ret = poll(fds, m_connectedClientsFds.size(), 1000);
+    return ret;
+}
+
+bool TcpServer::hasPeerHungup(pollfd fd) {
+    spdlog::debug("Peer {} has hung up ", fd.fd);
+    return fd.revents & (POLLHUP | POLLERR | POLLRDHUP);
+}
+
+bool TcpServer::hasReceivedData(pollfd fd) {
+    return fd.revents & POLLIN;
+}
+
+void TcpServer::readRxData(pollfd fd) {
+    char *msgBuf = new char[MSG_MAX_SIZE];
+    if (read(fd.fd, msgBuf, MSG_MAX_SIZE) != 0) {
+        spdlog::info("From {} : {} ", fd.fd, std::string(msgBuf));
+        m_dataHandler->push(std::string(msgBuf), m_name);
+    }
+    delete[] msgBuf;
 }
 
 /* Poll the list of sockets.
-*/
-void TcpServer::receiveData(){
-	//PLOG_DEBUG << "Receive data ";
-
-	pollfd* pollfds = new pollfd[BACKLOG];
-	char* msgBuf = new char[MSG_MAX_SIZE];
-	int ret;
-	fdToPollFdArray(pollfds);
-	ret = poll(pollfds,m_connectedClientsFds.size(), 1000);
-	/* On success, poll() returns a nonnegative value which is the
-	   number of elements in the pollfds whose revents fields have been
-	   set to a nonzero value (indicating an event or an error).  A
-	   return value of zero indicates that the system call timed out
-	   before any file descriptors became read.
-	*/
-	//PLOG_DEBUG << "Poll return " << ret;
-
-    if (ret != 0) {
-    	for (int i=0;i<m_connectedClientsFds.size();i++){
-    		if (pollfds[i].revents & (POLLHUP | POLLERR)){ 
-    		    PLOG_INFO << "Socket " << pollfds[i].fd << " has hung up ";
-    			std::lock_guard<std::mutex> guard(m_connectedClientsMutex);
-    			m_connectedClientsFds.remove(pollfds[i].fd);
-    		}
-    		   //call method that removes fd from list
-    		else if (pollfds[i].revents & POLLIN ) {
-    	       if (read(pollfds[i].fd, msgBuf, MSG_MAX_SIZE) != 0){
-    	       	PLOG_INFO << "From " << pollfds[i].fd << std::string(msgBuf);
-    	       	m_dataHandler->push(std::string(msgBuf),m_name);
-    	       }
-    	    } else {
-    	    	PLOG_DEBUG << "on FD " << pollfds[i].fd << "Unknown poll revent: " << pollfds[i].revents;
-    	    }
-    	}
-    } else {
-    	PLOG_DEBUG << "Poll Time out on " << ret << " sockets";
+ */
+void TcpServer::checkRx() {
+    pollfd *pollfds = new pollfd[BACKLOG];
+    int p           = pollFds(pollfds);
+    if (p != 0) {
+        for (int i = 0; i < m_connectedClientsFds.size(); i++) {
+            if (hasPeerHungup(pollfds[i])) {
+                spdlog::debug("Peer hang up");
+                ;
+                remConnectedClient(pollfds[i].fd);
+            } else if (hasReceivedData(pollfds[i])) {
+                spdlog::debug("Received data");
+                readRxData(pollfds[i]);
+            } else {
+                spdlog::debug("Unknown event {}", pollfds[i].revents);
+            }
+        }
     }
-    delete[] msgBuf;
     delete[] pollfds;
 }
 
-std::string TcpServer::getPeerIp(sockaddr* addr){
-	struct sockaddr_in *addr_in = (struct sockaddr_in *)addr;
-    return std::string(inet_ntoa(addr_in->sin_addr));
+std::list<std::string> TcpServer::getConnectedPeers() {
+    std::list<std::string> ret;
+    std::string id;
+    for (auto i : m_connectedClientsFds) {
+        id = getPeerIp(i) + ":" + std::to_string(getPeerPort(i));
+        ret.push_back(id);
+    }
+    return ret;
 }
 
-uint16_t TcpServer::getPeerPort(sockaddr* addr){
-	struct sockaddr_in *addr_in = (struct sockaddr_in *)addr;
-    return addr_in->sin_port;
+/**
+ * @param: peer socket address
+ * @return: string with its ipv4 address
+ */
+std::string TcpServer::getPeerIp(int fd) {
+    struct sockaddr_in peerAddr;
+    socklen_t socketSize = sizeof(peerAddr);
+    ::getpeername(fd, (struct sockaddr *)&peerAddr, &socketSize);
+    return std::string(inet_ntoa(peerAddr.sin_addr));
 }
 
-void TcpServer::fdToPollFdArray(pollfd* pollfds ){
-	int pos = 0;
-	PLOG_DEBUG << "Having  " << m_connectedClientsFds.size() << " FDs";
+/**
+ * @param
+ * @return
+ */
+uint16_t TcpServer::getPeerPort(int fd) {
+    struct sockaddr_in peerAddr;
+    socklen_t socketSize = sizeof(peerAddr);
+    ::getpeername(fd, (struct sockaddr *)&peerAddr, &socketSize);
+    return peerAddr.sin_port;
+}
 
-	for (auto i:m_connectedClientsFds)
-	{   
-		pollfds[pos].fd    = i;
-		pollfds[pos].events = (POLLIN | POLLPRI | POLLERR); 
-		/*this will poll for the following:
-		#define POLLIN                0x001                 There is data to read.  
-		#define POLLPRI                0x002                 There is urgent data to read.  
-		*/
-		pos++;
-
-	}
+void TcpServer::fdToPollFdArray(pollfd *pollfds) {
+    int pos = 0;
+    for (auto i : m_connectedClientsFds) {
+        pollfds[pos].fd     = i;
+        pollfds[pos].events = (POLLIN | POLLPRI | POLLERR | POLLRDHUP);
+        /*this will poll for the following:
+        #define POLLIN                0x001                 There is data to read.
+        #define POLLPRI                0x002                 There is urgent data to read.
+        */
+        pos++;
+    }
 }
