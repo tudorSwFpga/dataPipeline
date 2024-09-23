@@ -1,0 +1,37 @@
+# 1) To enable the pre-commit hooks do:
+#    $ pip3 install pre-commit
+#    $ pre-commit install
+# 2) To manually run the pre-commit scripts on modified files do:
+#    $ pre-commit run
+# 3) To manually run the pre-commit scripts on all files do:
+#    $ pre-commit run --all-files
+# 4) To skip pre-commit hooks on a commit:
+#    $ git commit --no-verify
+# 5) To update after adding a new hook
+#    $ pre-commit autoupdate && pre-commit run --all-files
+
+exclude: .*doctest.h
+fail_fast: false
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.4.0
+    hooks:
+    - id: check-added-large-files
+      args:
+        - '--maxkb=512'
+    - id: check-ast
+    - id: check-yaml
+      args: ['--unsafe']
+    - id: check-json
+    - id: trailing-whitespace
+    - id: end-of-file-fixer
+    - id: check-merge-conflict
+    - id: check-shebang-scripts-are-executable
+
+  - repo: https://github.com/pre-commit/mirrors-clang-format
+    rev: v17.0.6
+    hooks:
+    - id: clang-format
+      args: [--style=file, -i]
+      types_or: [c++, c]
+      exclude_types: [objective-c]
