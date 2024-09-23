@@ -18,23 +18,17 @@
 #ifndef PROXY_NODE_H
 #define PROXY_NODE_H
 
-
-class ProxyNode:public Runnable
-{
+class ProxyNode {
 public:
+    ProxyNode(const std::string &name, const uint16_t &port, DataManager<std::string> *dataHandler) :
+        m_name(name), m_port(port), m_dataHandler(dataHandler){};
+    ~ProxyNode(){};
 
-    ProxyNode(const std::string& name, 
-              const uint16_t& port, 
-              DataManager<std::string>* dataHandler):
-        m_name(name),m_port(port), m_dataHandler(dataHandler){};
-    ~ProxyNode(){}; 
-
-    bool addHandler(const std::string& name);
+    bool addHandler(const std::string &name);
     const std::string m_name;
 
 protected:
-
     const uint16_t m_port;
-    DataManager<std::string>* m_dataHandler;
+    DataManager<std::string> *m_dataHandler;
 };
 #endif
