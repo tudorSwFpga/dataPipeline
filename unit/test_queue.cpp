@@ -38,7 +38,9 @@ std::thread run_consumer(std::shared_ptr<Q<std::string>> q, std::vector<std::str
             q->pop(msg);
             rx_data.push_back(msg);
             std::this_thread::sleep_for(std::chrono::milliseconds(100));
+            spdlog::debug("C in the loop");
         }
+        spdlog::debug("stoppping c thread");
     });
     return consumerThread;
 }
@@ -52,6 +54,8 @@ std::thread run_feeder(std::shared_ptr<Q<std::string>> q, std::vector<std::strin
             q->push(msg);
             std::this_thread::sleep_for(std::chrono::milliseconds(500));
         }
+        q->stop();
+        spdlog::debug("stoppping f thread");
     });
 
     return feederThread;
@@ -70,7 +74,7 @@ TEST(DataManager, FeedersAndConsumers) {
     stopTest = true;
     feeder.join();
     consumer.join();
-
+    std::cout << "STOP2" << std::endl;
     // check tx vs rx data
     for (auto it : tx_data) {
         bool found = false;
