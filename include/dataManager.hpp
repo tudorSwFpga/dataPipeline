@@ -10,6 +10,7 @@
 #include <functional>
 #include <iterator>
 #include "runnable.hpp"
+#include "queue.hpp"
 #include <string>
 /* This class helps managing data coming from one or several sources and copies it to one or several
    output queues.
@@ -27,11 +28,6 @@ protected:
 
     ~DataManager() {
         spdlog::debug(" DataM Destructor");
-
-        /*delete  m_inQueues;
-        delete  m_outQueues;
-        delete  m_inQueuesIds;
-        delete  m_outQueuesIds;*/
     }
     const std::string m_Name;
 
@@ -42,7 +38,7 @@ public:
     void operator=(const DataManager &) = delete;
     // get access to the instance
 
-    static DataManager<T> *getInstance(const std::string &name);
+    static DataManager<T> *getInstance(const std::string &name, uint8_t inQ, uint8_t outQ, MODE m);
 
     // define number of input/output queues and the dispatching mode
     bool setConf(const uint8_t &inQueues, const uint8_t &outQueues, const MODE &mode);
@@ -65,8 +61,6 @@ public:
     // get name
     std::string getName();
 
-    std::condition_variable[] m_condVarOut;
-
     // TODO:
     // setDecoder
     // setParser
@@ -82,9 +76,9 @@ private:
     const uint8_t m_maxNbOutQueues;
     const MODE m_mode;
 
-    bool m_isRunning;
-    std::vector<std::queue<T>> m_inQueues;
-    std::vector<std::queue<T>> m_outQueues;
+    bool isRunning_;
+    std::vector<Q<T>> m_inQueues;
+    std::vector<Q<T>> m_outQueues;
 
     std::map<std::string, int> m_inQueuesIds;
     std::map<std::string, int> m_outQueuesIds;

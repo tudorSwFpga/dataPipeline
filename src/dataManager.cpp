@@ -4,21 +4,21 @@
 #include "spdlog/spdlog.h"
 
 template<class T>
-DataManager<T> *DataManager<T>::getInstance(const std::string &name) {
+DataManager<T> *DataManager<T>::getInstance(const std::string &name, uint8_t inQ, uint8_t outQ, MODE m) {
     std::lock_guard<std::mutex> lock(m_Mutex);
     if (m_Pinstance == nullptr) {
-        m_Pinstance = new DataManager<T>(name);
+        m_Pinstance = new DataManager<T>(name, inQ, outQ, m);
     }
     return m_Pinstance;
 }
 
-template<class T>
+/*template<class T>
 bool DataManager<T>::setConf(const uint8_t &inQueues, const uint8_t &outQueues, const MODE &mode) {
     m_maxNbInQueues  = inQueues;
     m_maxNbOutQueues = outQueues;
     m_mode           = mode;
     return true;
-}
+}*/
 
 template<class T>
 void DataManager<T>::getConf(std::map<std::string, int> &inIds, std::map<std::string, int> &outIds) {
@@ -38,26 +38,26 @@ void DataManager<T>::reset() {
 
 template<class T>
 void DataManager<T>::run() {
-    m_isRunning = true;
+    isRunning_ = true;
     do {
         if (m_mode == BROADCAST) {
             DataManager::manageBroadcast();
         } else {
             DataManager::manageMap();
         }
-    } while (m_isRunning);
+    } while (isRunning_);
     spdlog::debug(" DataManager stopped");
 }
 
 template<class T>
 void DataManager<T>::stop() {
     spdlog::debug(" DataManager stopping...");
-    m_isRunning = false;
-    for (auto cv : m_condVarIn) {
-        cv.notify_all();
+    isRunning_ = false;
+    for (auto &q : m_inQueues) {
+        q.stop();
     }
-    for (auto &cv : m_condVarOut) {
-        cv.notify_all();
+    for (auto &q : m_outQueues) {
+        q.stop();
     }
 }
 /*
@@ -65,28 +65,15 @@ check each input queue status and copy on every output queue
 */
 template<class T>
 void DataManager<T>::manageBroadcast() {
-    spdlog::debug("DataManager::manageBroadcast Waiting...");
-    std::unique_lock<std::mutex> lk(m_inQueuesMutex);
-    m_condVarIn.wait(lk);
-    T data;
-    int i = 0;
+    std::list<int> broadCastList;
+    for (int i = 0; i < m_outQueues.size(); ++i) {
+        broadCastList.push_back(i);
+    }
     for (auto &it : m_inQueues) {
-        spdlog::debug("manageBroadcast wtf is it happening");
         if (!it.empty()) {
-            data = it.front();
-            it.pop();
-            { // local context to reduce lock time acquisition
-                spdlog::debug(" Acquire out lock");
-                std::unique_lock<std::mutex> lockout(m_outQueuesMutex);
-                for (auto &it : m_outQueues) {
-                    it.push(data);
-                    spdlog::debug(" Pushing new data {} to output q;Notyifing consumers!", data);
-                }
-                m_condVarOut[i].notify_all();
-                // TOOD: replace here by something that also notifies users
-            }
+            spdlog::debug(" Broadcasting", it.queue.size());
+            it.copy(m_outQueues, broadCastList);
         }
-        i++;
     }
 }
 
@@ -95,34 +82,27 @@ void DataManager<T>::manageMap() {}
 
 template<class T>
 void DataManager<T>::push(T &&data, const std::string &pushId) {
-    // acquire mutex and push data into the input queue
-    std::unique_lock<std::mutex> guard(m_inQueuesMutex);
     if (m_inQueuesIds.count(pushId) == 0) {
         spdlog::error("No input queue with ID: {}", pushId);
     } else {
         m_inQueues[m_inQueuesIds[pushId]].push(data);
         spdlog::info(" Pushed new data {} in queue {}", data, std::to_string(m_inQueuesIds[pushId]));
-        // notify thread waiting waiting for input data
-        m_condVarIn.notify_one();
     }
 }
 
 template<class T>
 bool DataManager<T>::pop(const std::string &popId, std::vector<T> &data) {
-    // acquire mutex and push data into the input queue
+    T q_msg;
     if (m_outQueuesIds.count(popId) == 0) {
         spdlog::error("No output queue with ID: " + popId);
         return false;
     } else {
-        std::unique_lock<std::mutex> lk(m_outQueuesMutex);
         const int id = m_outQueuesIds[popId];
-        m_condVarOut[id].wait(lk);
-        // pop oldest data and then erase it
-        while (!m_outQueues[m_outQueuesIds[popId]].empty()) {
-            data.push_back(m_outQueues[m_outQueuesIds[popId]].front());
-            m_outQueues[m_outQueuesIds[popId]].pop();
+        if (!m_outQueues[id].empty()) {
+            spdlog::debug("Popping data from output queue {}, size {}", popId, m_outQueues[id].queue.size());
+            m_outQueues[id].move(data);
+            spdlog::debug("size is now {}", m_outQueues[id].queue.size());
         }
-        spdlog::debug("Popping data from output queue {}", popId);
         return true;
     }
 }
@@ -133,7 +113,7 @@ bool DataManager<T>::setFeeder(const std::string &appId) {
         // initially all the map is empty
         if (m_inQueuesIds.size() < m_maxNbInQueues) {
             m_inQueuesIds.emplace(std::make_pair(appId, m_inQueuesIds.size()));
-            m_inQueues.push_back(std::queue<T>());
+            m_inQueues.emplace_back(Q<T>());
             spdlog::debug("New Feeder: {}", appId);
 
             // but once it becomes full, we can only find place if a feeder has left
@@ -173,7 +153,7 @@ bool DataManager<T>::setConsumer(const std::string &appId) {
         if (m_outQueuesIds.size() < m_maxNbOutQueues) {
             m_outQueuesIds.emplace(std::make_pair(appId, m_outQueuesIds.size()));
             // m_hasData.emplace(std::make_pair(appId,false));
-            m_outQueues.push_back(std::queue<T>());
+            m_outQueues.emplace_back(Q<T>());
             spdlog::info("New Consumer " + appId);
             spdlog::info("New number of out queues {}", m_outQueues.size());
             // but once it becomes full, we can only find place if a feeder has left

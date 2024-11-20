@@ -115,7 +115,8 @@ TEST(DataManager, FeedersAndConsumers) {
 TEST(DataManager, 2Feeders1Consumer) {
     spdlog::set_level(spdlog::level::debug);
     std::vector<std::string> tx_data[2];
-    std::atomic<bool> stopTest(false);
+    std::atomic<bool> stopFeeders(false);
+    std::atomic<bool> stopConsumers(false);
     srand(time(NULL));
     DataManager<std::string> *dataManager = DataManager<std::string>::getInstance("testDataManager", 2, 2, BROADCAST);
     // dataManager->setConf(2, 2, BROADCAST);
@@ -127,16 +128,18 @@ TEST(DataManager, 2Feeders1Consumer) {
     std::thread t[4];
     for (int i = 0; i < 2; i++) {
         const std::string id = "Feeder" + std::to_string(i);
-        t[i]                 = run_feeder(id, dataManager, tx_data[i], stopTest);
+        t[i]                 = run_feeder(id, dataManager, tx_data[i], stopFeeders);
     }
     // consumer thread
     std::vector<std::string> rx_data;
-    t[2] = run_consumer("Consumer1", dataManager, rx_data, stopTest);
+    t[2] = run_consumer("Consumer1", dataManager, rx_data, stopConsumers);
     t[3] = run_data_manager(dataManager);
     sleep(5);
     std::cout << "STOP" << std::endl;
+    stopFeeders = true;
+    sleep(1);
     dataManager->stop();
-    stopTest = true;
+    stopConsumers = true;
     for (int i = 0; i < 4; i++) {
         t[i].join();
     }
@@ -167,26 +170,26 @@ TEST(DataManager, 1Feeder2Consumers) {
     std::vector<std::string> rx_data[2];
     std::atomic<bool> stopTest(false);
     srand(time(NULL));
-    DataManager<std::string> *dataManager = DataManager<std::string>::getInstance("testDataManager");
+    DataManager<std::string> *dataManager = DataManager<std::string>::getInstance("testDataManager", 2, 2, BROADCAST);
     // reset data manager because singleton
     dataManager->reset();
     dataManager->getConf(inIds, outIds);
     EXPECT_EQ(inIds.size(), 0);
     EXPECT_EQ(outIds.size(), 0);
-    dataManager->setConf(1, 2, BROADCAST);
+    // dataManager->setConf(1, 2, BROADCAST);
     dataManager->setFeeder("Feeder");
     dataManager->setConsumer("Consumer0");
     dataManager->setConsumer("Consumer1");
     // data manager thread
     // launch 1 thread per feeder
     std::thread t[4];
-    t[0] = run_feeder("Feeder", dataManager, tx_data, stopTest);
+    t[0] = run_data_manager(dataManager);
+    t[3] = run_feeder("Feeder", dataManager, tx_data, stopTest);
     // consumer thread
     for (int i = 1; i < 3; i++) {
         const std::string id = "Consumer" + std::to_string(i - 1);
-        t[i]                 = run_consumer(id, dataManager, rx_data[i], stopTest);
+        t[i]                 = run_consumer(id, dataManager, rx_data[i - 1], stopTest);
     }
-    t[3] = run_data_manager(dataManager);
     sleep(5);
     std::cout << "STOP" << std::endl;
     dataManager->stop();
