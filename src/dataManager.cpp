@@ -4,10 +4,10 @@
 #include "spdlog/spdlog.h"
 
 template<class T>
-DataManager<T> *DataManager<T>::getInstance(const std::string &name, uint8_t inQ, uint8_t outQ, MODE m) {
+DataManager<T> *DataManager<T>::getInstance(const DataManagerConf &conf) {
     std::lock_guard<std::mutex> lock(m_Mutex);
     if (m_Pinstance == nullptr) {
-        m_Pinstance = new DataManager<T>(name, inQ, outQ, m);
+        m_Pinstance = new DataManager<T>(conf);
     }
     return m_Pinstance;
 }

@@ -81,7 +81,9 @@ std::thread run_data_manager(DataManager<std::string> *dataManager) {
 
 TEST(DataManager, FeedersAndConsumers) {
     spdlog::set_level(spdlog::level::debug);
-    DataManager<std::string> *dataManager = DataManager<std::string>::getInstance("testDataManager", 2, 2, BROADCAST);
+
+    DataManagerConf config{"testDataManager", 2, 2, BROADCAST};
+    DataManager<std::string> *dataManager = DataManager<std::string>::getInstance(config);
     // dataManager->setConf(2, 2, BROADCAST);
     dataManager->setFeeder("Feeder0");
     dataManager->setFeeder("Feeder3");
@@ -118,7 +120,9 @@ TEST(DataManager, 2Feeders1Consumer) {
     std::atomic<bool> stopFeeders(false);
     std::atomic<bool> stopConsumers(false);
     srand(time(NULL));
-    DataManager<std::string> *dataManager = DataManager<std::string>::getInstance("testDataManager", 2, 2, BROADCAST);
+
+    DataManagerConf config{"testDataManager", 2, 2, BROADCAST};
+    DataManager<std::string> *dataManager = DataManager<std::string>::getInstance(config);
     // dataManager->setConf(2, 2, BROADCAST);
     dataManager->setFeeder("Feeder0");
     dataManager->setFeeder("Feeder1");
@@ -170,7 +174,9 @@ TEST(DataManager, 1Feeder2Consumers) {
     std::vector<std::string> rx_data[2];
     std::atomic<bool> stopTest(false);
     srand(time(NULL));
-    DataManager<std::string> *dataManager = DataManager<std::string>::getInstance("testDataManager", 2, 2, BROADCAST);
+
+    DataManagerConf config{"testDataManager", 2, 2, BROADCAST};
+    DataManager<std::string> *dataManager = DataManager<std::string>::getInstance(config);
     // reset data manager because singleton
     dataManager->reset();
     dataManager->getConf(inIds, outIds);

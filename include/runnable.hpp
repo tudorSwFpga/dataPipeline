@@ -1,22 +1,14 @@
-#include <iostream>
-#ifndef RUNNABLE_H
-#define RUNNABLE_H
+#pragma once
+#include <atomic>
 
-class Runnable
-{
+class Runnable {
 public:
-	Runnable() : m_isRunning(false){
-	}
-	~Runnable() {
-	}
+    Runnable() : m_isRunning(false) {}
+    ~Runnable() {}
 
-	void start();
-	virtual void run();
-	void stop();
+    virtual void run();
+    virtual void stop();
 
 protected:
-	bool m_isRunning;
-
+    std::atomic<bool> m_isRunning;
 };
-
-#endif

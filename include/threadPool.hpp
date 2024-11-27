@@ -5,15 +5,13 @@
 #include <condition_variable>
 #include <thread>
 #include <utility>
-#include <plog/Log.h>
-
-#ifndef TP_H
-#define TP_H
+#include "spdlog/spdlog.h"
+#pragma once
 
 class ThreadPool {
 public:
     ThreadPool(const uint32_t &nproc) : m_nproc(nproc) {
-        PLOG_DEBUG << "Constructor with " << nproc << " threads";
+        spdlog::debug("ThreadPool ctor with {} threads", nproc);
     };
     void start();
     void QueueJob(const std::string &jobName, const std::function<void()> &job);
@@ -28,5 +26,3 @@ private:
     std::vector<std::thread> threads;
     std::queue<std::pair<std::string, std::function<void()>>> jobs;
 };
-
-#endif

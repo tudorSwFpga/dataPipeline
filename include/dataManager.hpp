@@ -18,11 +18,18 @@
 
 enum MODE { BROADCAST, MAP };
 
+struct DataManagerConf {
+    const std::string name;
+    uint8_t maxFeeders;
+    uint8_t maxConsumers;
+    MODE mode;
+};
+
 template<class T>
 class DataManager {
 protected:
-    DataManager(const std::string &name, uint8_t inQ, uint8_t outQ, MODE m) :
-        m_Name(name), m_maxNbInQueues(inQ), m_maxNbOutQueues(outQ), m_mode(m) {
+    DataManager(const DataManagerConf &conf) :
+        m_Name(conf.name), m_maxNbInQueues(conf.maxFeeders), m_maxNbOutQueues(conf.maxConsumers), m_mode(conf.mode) {
         spdlog::debug("DataManager Constructor;");
     }
 
@@ -38,7 +45,7 @@ public:
     void operator=(const DataManager &) = delete;
     // get access to the instance
 
-    static DataManager<T> *getInstance(const std::string &name, uint8_t inQ, uint8_t outQ, MODE m);
+    static DataManager<T> *getInstance(const DataManagerConf &conf);
 
     // define number of input/output queues and the dispatching mode
     bool setConf(const uint8_t &inQueues, const uint8_t &outQueues, const MODE &mode);

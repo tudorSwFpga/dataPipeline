@@ -39,7 +39,8 @@ TEST(TCPConnection, 1client) {
     spdlog::set_level(spdlog::level::debug);
     std::atomic<bool> stopTest(false);
     srand(time(NULL));
-    DataManager<std::string> *dataManager = DataManager<std::string>::getInstance("testDataManager", 2, 2, BROADCAST);
+    DataManagerConf config{"testDataManager", 2, 2, BROADCAST};
+    DataManager<std::string> *dataManager = DataManager<std::string>::getInstance(config);
     // dataManager->setConf(2, 2, BROADCAST);
     const uint16_t tcpPort = 50000 + rand() % 30;
     TcpServer server("myTCP", tcpPort, dataManager);
@@ -71,7 +72,8 @@ TEST(TCPConnection, 1client) {
 TEST(TCPConnection, 10clients) {
     std::atomic<bool> stopTest(false);
     srand(time(NULL));
-    DataManager<std::string> *dataManager = DataManager<std::string>::getInstance("testDataManager", 2, 2, BROADCAST);
+    DataManagerConf config{"testDataManager", 2, 2, BROADCAST};
+    DataManager<std::string> *dataManager = DataManager<std::string>::getInstance(config);
     // dataManager->setConf(2, 2, BROADCAST);
     const uint16_t tcpPort = 50000 + rand() % 30;
     TcpServer server("myTCP", tcpPort, dataManager);
@@ -112,7 +114,8 @@ TEST(TCPConnection, 10clients) {
 TEST(TCPData, reception) {
     std::atomic<bool> stopTest(false);
     srand(time(NULL));
-    DataManager<std::string> *dataManager = DataManager<std::string>::getInstance("testDataManager", 2, 2, BROADCAST);
+    DataManagerConf config{"testDataManager", 2, 2, BROADCAST};
+    DataManager<std::string> *dataManager = DataManager<std::string>::getInstance(config);
     // dataManager->setConf(2, 2, BROADCAST);
     const uint16_t tcpPort = 50000 + rand() % 30;
     TcpServer server("myTCP", tcpPort, dataManager);
