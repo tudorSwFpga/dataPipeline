@@ -5,12 +5,13 @@
 #include <condition_variable>
 #include <list>
 #include <iostream>
+#include "spdlog/spdlog.h"
 
 template<class T>
 class Q {
 public:
     Q() {
-        std::cout << "Q ctor" << std::endl;
+        spdlog::debug("Q ctor");
     };
 
     // Delete the copy constructor and copy assignment operator
@@ -33,7 +34,7 @@ public:
     }
 
     ~Q() {
-        std::cout << "Q dtor" << std::endl;
+        spdlog::debug("Q dtor");
     };
 
     // copy data to another Q
