@@ -1,6 +1,6 @@
-#include <plog/Log.h>
 #ifndef DATA_FRAMEWORK_H
 #define DATA_FRAMEWORK_H
+#include "spdlog/spdlog.h"
 #include "runnable.hpp"
 #include "dataManager.hpp"
 #include "proxy.hpp"
@@ -23,39 +23,39 @@ class DataFramework : public Runnable {
 public:
     // TODO: pass a config file
     DataFramework(const std::string &conf) {
-        PLOG_DEBUG << "Constructor";
+        spdlog::debug(" DataFramework Ctor");
         if (this->setConf(conf)) {
-            PLOG_INFO << "Topology parsed and objects created; ready to start";
+            spdlog::info("Topology parsed and objects created; ready to start");
         }
     }
 
     ~DataFramework() {
-        PLOG_DEBUG << "Dtor";
+        spdlog::debug(" DataFramework Dtor");
     }
 
-    // set the path to the configuration file
-    void start();
-    void stop();
-    void run();
+    void stop() override;
+    void run() override;
 
 private:
     pt::ptree m_pt;
     std::string m_config;
     int m_threadCount;
+    std::thread m_mainThread;
     bool setConf(const std::string &conf);
+    bool setDataManagerConf();
     bool parseConf();
     bool instantiateProxy(const std::string &type);
     bool instantiateDataManager();
     bool instantiateThreadPool();
+    void runJobs();
+    DataManagerConf m_dataManagerConf;
 
     Proxy::ProxyType getProxyType(const std::string &type);
 
     std::shared_ptr<ThreadPool> m_threadPoolPtr;
-    std::unique_ptr<Proxy> m_inProxyPtr;
-    std::unique_ptr<Proxy> m_outProxyPtr;
+    std::shared_ptr<Proxy> m_inProxyPtr;
+    std::shared_ptr<Proxy> m_outProxyPtr;
     DataManager<std::string> *m_dataManager;
-    // Proxy m_inProxy(m_threadPoolPtr);
-    // Proxy m_outProxy(m_threadPoolPtr);
 };
 
 #endif
