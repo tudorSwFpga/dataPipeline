@@ -1,5 +1,5 @@
 #define BACKLOG 50
-#define MSG_MAX_SIZE 100 // 100 byts max sent by peer
+#define MSG_MAX_SIZE 512 // 512 bytes max sent by peer
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -35,7 +35,7 @@ public:
 
     const std::string m_name;
     // TODO: why to declare this here since it should be inherited from Runnable
-    void run();
+    void run() override;
 
     std::list<std::string> getConnectedPeers();
 
@@ -85,17 +85,18 @@ public:
         addr.sin_port        = htons(remPort);
 
         m_sockfd = sockfd;
-        spdlog::debug("Client {0} attempting connection to 127.0.0.1: {1} ", m_name, remPort);
-        return ::connect(sockfd, (const struct sockaddr *)&addr, sizeof(sockaddr_in));
+        spdlog::debug("TcpClient {0} attempting connection to 127.0.0.1: {1} ", m_name, remPort);
+        auto ret = ::connect(sockfd, (const struct sockaddr *)&addr, sizeof(sockaddr_in));
+        return ret;
     }
 
     int send(const std::string &msg) {
-        spdlog::debug("sending data");
+        spdlog::debug("TcpClient sending data");
         return ::send(m_sockfd, msg.c_str(), sizeof(msg), 0);
     }
 
     int disconnect() {
-        spdlog::debug("Client disconnecting");
+        spdlog::debug("TcpClient disconnecting");
         return close(m_sockfd);
     }
 
