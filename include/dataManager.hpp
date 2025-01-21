@@ -12,14 +12,26 @@
 #include "runnable.hpp"
 #include "queue.hpp"
 #include <string>
+#include <algorithm>
+#include <cctype>
 /* This class helps managing data coming from one or several sources and copies it to one or several
    output queues.
 */
 
 enum MODE { BROADCAST, MAP };
 
+#define STRING_TO_CONF(str)                                                                                         \
+    ([](std::string input) -> MODE {                                                                                \
+        std::transform(input.begin(), input.end(), input.begin(), [](unsigned char c) { return std::tolower(c); }); \
+        if (input == "broadcast")                                                                                   \
+            return BROADCAST;                                                                                       \
+        if (input == "map")                                                                                         \
+            return MAP;                                                                                             \
+        throw std::invalid_argument("Invalid mode: " + input);                                                      \
+    }(str))
+
 struct DataManagerConf {
-    const std::string name;
+    std::string name;
     uint8_t maxFeeders;
     uint8_t maxConsumers;
     MODE mode;

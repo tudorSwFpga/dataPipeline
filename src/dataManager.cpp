@@ -102,8 +102,9 @@ bool DataManager<T>::pop(const std::string &popId, std::vector<T> &data) {
             spdlog::debug("Popping data from output queue {}, size {}", popId, m_outQueues[id].queue.size());
             m_outQueues[id].move(data);
             spdlog::debug("size is now {}", m_outQueues[id].queue.size());
+            return true;
         }
-        return true;
+        return false;
     }
 }
 
@@ -115,7 +116,6 @@ bool DataManager<T>::setFeeder(const std::string &appId) {
             m_inQueuesIds.emplace(std::make_pair(appId, m_inQueuesIds.size()));
             m_inQueues.emplace_back(Q<T>());
             spdlog::debug("New Feeder: {}", appId);
-
             // but once it becomes full, we can only find place if a feeder has left
         } else {
             auto f = m_inQueuesIds.find("empty");
@@ -154,8 +154,8 @@ bool DataManager<T>::setConsumer(const std::string &appId) {
             m_outQueuesIds.emplace(std::make_pair(appId, m_outQueuesIds.size()));
             // m_hasData.emplace(std::make_pair(appId,false));
             m_outQueues.emplace_back(Q<T>());
+
             spdlog::info("New Consumer " + appId);
-            spdlog::info("New number of out queues {}", m_outQueues.size());
             // but once it becomes full, we can only find place if a feeder has left
         } else {
             auto f = m_outQueuesIds.find("empty");
