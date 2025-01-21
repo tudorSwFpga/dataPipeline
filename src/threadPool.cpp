@@ -4,11 +4,11 @@ void ThreadPool::start() {
     threads.resize(m_nproc);
     spdlog::debug("Starting N threads");
     for (uint32_t i = 0; i < m_nproc; i++) {
-        threads.at(i) = std::thread(&ThreadPool::ThreadLoop, this);
+        threads.at(i) = std::thread(&ThreadPool::ThreadLoop, this, i);
     }
 }
 
-void ThreadPool::ThreadLoop() {
+void ThreadPool::ThreadLoop(const int &id) {
     while (true) {
         std::pair<std::string, std::function<void()>> job;
         {
@@ -20,7 +20,7 @@ void ThreadPool::ThreadLoop() {
             job = jobs.front();
             jobs.pop();
         }
-        spdlog::debug("Running Job ", job.first);
+        spdlog::debug("ThreadLoop {} Running Job {}", id, job.first);
         job.second();
     }
 }
@@ -29,7 +29,7 @@ void ThreadPool::QueueJob(const std::string &jobName, const std::function<void()
     {
         std::unique_lock<std::mutex> lock(queue_mutex);
         jobs.push(std::make_pair(jobName, job));
-        spdlog::debug("Queueing job ", jobName);
+        // spdlog::debug("Queueing job {}", jobName);
     }
     mutex_condition.notify_one();
 }

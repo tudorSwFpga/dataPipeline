@@ -18,7 +18,7 @@ public:
     void stop();
 
 private:
-    void ThreadLoop();
+    void ThreadLoop(const int &id);
     uint32_t m_nproc;
     bool should_terminate = false;           // Tells threads to stop looking for jobs
     std::mutex queue_mutex;                  // Prevents data races to the job queue
