@@ -18,7 +18,7 @@
 #ifndef PROXY_NODE_H
 #define PROXY_NODE_H
 
-class ProxyNode {
+class ProxyNode : public Runnable {
 public:
     ProxyNode(const std::string &name, const uint16_t &port, DataManager<std::string> *dataHandler) :
         m_name(name), m_port(port), m_dataHandler(dataHandler){};
