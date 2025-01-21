@@ -1,56 +1,41 @@
-#include <plog/Log.h>
-#ifndef CONSUMER_H
-#define CONSUMER_H
+#pragma once
 #include <mutex>
 #include "dataManager.hpp"
 #include "proxyNode.hpp"
 #include <thread>
 #include <chrono>
+#include <atomic>
+#include "spdlog/spdlog.h"
 
-class Consumer: public ProxyNode
-{
-
+class Consumer : public ProxyNode {
 public:
-	//default constructor
-	Consumer(const std::string& name,const uint16_t& port,
-		   DataManager<std::string>* dataHandler):
-	ProxyNode(name,port,dataHandler)
-	{
-		this->m_dataHandler->setConsumer(name);
-        PLOG_DEBUG << " New consumer : " << name;
-	}
+    // default constructor
+    Consumer(const std::string &name, const uint16_t &port, DataManager<std::string> *dataHandler) :
+        ProxyNode(name, port, dataHandler) {
+        this->m_dataHandler->setConsumer(name);
+        spdlog::debug(" New consumer : {} ", name);
+    }
 
-	~Consumer(){
-		PLOG_DEBUG << " Dtor : "	;
-	}
+    ~Consumer() {
+        spdlog::debug("{} Dtor", m_name);
+    }
 
+    void run() {
+        m_isRunning = true;
+        while (m_isRunning) {
+            if (m_dataHandler->pop(m_name, m_data)) {
+                for (auto &it : m_data) {
+                    spdlog::debug("Consumer {} - {} ", m_name, it);
+                }
+            }
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        }
+    }
 
-	//bool addOnDataRxCb();
-
-	void run(){
-		while (m_isRunning){
-			std::string data;
-			if (m_dataHandler->pop(m_name,&data)){
-				std::cout << "Consumer " << m_name <<  data << std::endl;
-			} 
-			//usleep(100000);
-			//this_thread::sleep_for(chrono::milliseconds(100));
-		}
-	}	
-
-	void start(){
-		m_isRunning = true;
-	}
-
-	void stop(){
-		m_isRunning = false;
-	}
+    void stop() {
+        m_isRunning = false;
+    }
 
 private:
-	const std::string m_name;
-	bool m_isRunning;
-	
+    std::vector<std::string> m_data;
 };
-
-#endif
-
