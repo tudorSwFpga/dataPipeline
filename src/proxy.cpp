@@ -4,7 +4,7 @@
 #include <chrono>
 #include <poll.h>
 #include <unistd.h>
-#include <plog/Log.h>
+#include "spdlog/spdlog.h"
 #include "../include/proxy.hpp"
 #include "../include/proxyNode.hpp"
 #include "../include/threadPool.hpp"
@@ -28,25 +28,24 @@ bool Proxy::addNode(ProxyType type, const uint16_t &port, const std::string &nam
     }
     std::unique_lock<std::mutex> lk(m_proxyListMutex);
     m_proxyNodeList.push_back(node);
-    PLOG_DEBUG << "Added node " << name;
+    spdlog::info("Added node {}, proxyNodeList size {}", name, m_proxyNodeList.size());
+
     return true;
 }
 
-bool Proxy::addHandler(const std::string &name) {
-    m_dataHandler = DataManager<std::string>::getInstance(name);
+void Proxy::addHandler(DataManager<std::string> *handler) {
+    m_dataHandler = handler;
 }
 
 void Proxy::run() {
+    spdlog::set_level(spdlog::level::debug);
+    // spdlog::debug("Proy::run nodes {}",m_proxyNodeList.size());
+
     for (auto it : m_proxyNodeList) {
         std::function<void()> runProxy = [it]() { it->run(); };
         m_tp->QueueJob(it->m_name, runProxy);
-        PLOG_DEBUG << "Running proxy job " << it->m_name;
+        // spdlog::debug("Running proxy job {}",it->m_name);
     }
-    m_isRunning = true;
-}
-
-void Proxy::stop() {
-    m_isRunning = false;
 }
 
 Proxy::ProxyType Proxy::getProxyType(const std::string &type) {
