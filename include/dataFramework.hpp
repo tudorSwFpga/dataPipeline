@@ -36,6 +36,8 @@ public:
     void stop() override;
     void run() override;
 
+    void getConsumerNames(std::vector<std::string> &names);
+
 private:
     pt::ptree m_pt;
     std::string m_config;

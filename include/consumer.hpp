@@ -14,7 +14,7 @@ public:
     Consumer(const std::string &name, const uint16_t &port, DataManager<std::string> *dataHandler) :
         ProxyNode(name, port, dataHandler) {
         this->m_dataHandler->setConsumer(name);
-        spdlog::debug(" New consumer : {} ", name);
+        spdlog::debug(" Consumer {} ctor", name);
     }
 
     ~Consumer() {
@@ -34,6 +34,7 @@ public:
                     spdlog::debug("Consumer {} - {} ", m_name, it);
                     file << it << std::endl;
                 }
+                m_data.clear();
             }
             std::this_thread::sleep_for(std::chrono::milliseconds(100));
         }

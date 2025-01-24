@@ -130,3 +130,15 @@ bool DataFramework::instantiateThreadPool() {
     spdlog::debug("Number of threads set to {}", m_threadCount);
     return true;
 }
+
+void DataFramework::getConsumerNames(std::vector<std::string> &names) {
+    auto pNode = m_pt.get_child_optional("outProxy");
+    if (pNode) {
+        for (const auto &proxy : m_pt.get_child("outProxy")) {
+            Proxy::ProxyType type = Proxy::getProxyType(proxy.second.get<std::string>("type"));
+            if (type == Proxy::ProxyType::CONSUMER) {
+                names.push_back(proxy.second.get<std::string>("name"));
+            }
+        }
+    }
+}

@@ -38,18 +38,40 @@ public:
     };
 
     bool check() {
-        for (auto &i : {0, 1}) {
-            if (m_txData[i].size() != m_rxData[i].size()) {
-                spdlog::error("Client {} data not received", i);
+        // retrieve consumer names so that we can check the data received in the files
+        std::vector<std::string> consumerNames;
+        m_framework.getConsumerNames(consumerNames);
+        for (auto &i : consumerNames) {
+            const int consumer_id = std::stoi(i.substr(i.size() - 1));
+            std::ifstream file(i + ".txt");
+            if (!file.is_open()) {
+                spdlog::error("File {} not found", i + ".txt");
                 return false;
             }
-            for (auto &j : m_txData[i]) {
-                if (std::find(m_rxData[i].begin(), m_rxData[i].end(), j) == m_rxData[i].end()) {
-                    spdlog::error("Client {} data not received", i);
-                    return false;
+            std::string line;
+            while (std::getline(file, line)) {
+                m_rxData[consumer_id].push_back(line);
+            }
+            file.close();
+
+            for (auto &tx : m_txData) {
+                for (auto &j : tx) {
+                    bool found = false;
+                    for (auto k = m_rxData[consumer_id].begin(); k != m_rxData[consumer_id].end(); ++k) {
+                        if (k->find(j) != std::string::npos) {
+                            found = true;
+                            break;
+                        }
+                    }
+                    if (!found) {
+                        spdlog::error("{} data not received by {}", j, i);
+                        return false;
+                    }
                 }
             }
         }
+        spdlog::info("testTool::check() successful check");
+        return true;
     }
 
 private:
@@ -100,7 +122,8 @@ private:
 int main() {
     spdlog::set_level(spdlog::level::debug);
     // parse configuration
-    testTool test("topology.json", 10);
+    testTool test("topology.json", 5);
     test.run();
+    test.check();
     return 0;
 }
