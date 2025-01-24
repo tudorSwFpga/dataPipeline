@@ -5,6 +5,7 @@
 #include <thread>
 #include <chrono>
 #include <atomic>
+#include <fstream>
 #include "spdlog/spdlog.h"
 
 class Consumer : public ProxyNode {
@@ -22,14 +23,21 @@ public:
 
     void run() {
         m_isRunning = true;
+        std::ofstream file(m_name + ".txt");
+        if (!file.is_open()) {
+            spdlog::error("Failed to open file");
+            return;
+        }
         while (m_isRunning) {
             if (m_dataHandler->pop(m_name, m_data)) {
                 for (auto &it : m_data) {
                     spdlog::debug("Consumer {} - {} ", m_name, it);
+                    file << it << std::endl;
                 }
             }
             std::this_thread::sleep_for(std::chrono::milliseconds(100));
         }
+        file.close();
     }
 
     void stop() {
