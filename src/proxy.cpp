@@ -48,6 +48,13 @@ void Proxy::run() {
     }
 }
 
+void Proxy::stop() {
+    for (auto it : m_proxyNodeList) {
+        it->stop();
+        // spdlog::debug("Running proxy job {}",it->m_name);
+    }
+}
+
 Proxy::ProxyType Proxy::getProxyType(const std::string &type) {
     if (type.compare("TCP") == 0) {
         return Proxy::ProxyType::TCP;

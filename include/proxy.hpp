@@ -36,6 +36,7 @@ public:
 
     static ProxyType getProxyType(const std::string &type);
     void run() override;
+    void stop() override;
     // todo move this to private
     std::vector<ProxyNode *> m_proxyNodeList;
 

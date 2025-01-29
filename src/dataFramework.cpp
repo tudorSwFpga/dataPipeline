@@ -55,6 +55,9 @@ void DataFramework::run() {
 
 void DataFramework::stop() {
     m_isRunning = false;
+    m_dataManager->stop();
+    m_inProxyPtr->stop();
+    m_outProxyPtr->stop();
     m_mainThread.join();
     m_threadPoolPtr->stop();
 }
