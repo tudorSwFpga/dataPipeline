@@ -22,7 +22,7 @@ class ProxyNode : public Runnable {
 public:
     ProxyNode(const std::string &name, const uint16_t &port, DataManager<std::string> *dataHandler) :
         m_name(name), m_port(port), m_dataHandler(dataHandler){};
-    ~ProxyNode(){};
+    virtual ~ProxyNode(){};
 
     bool addHandler(const std::string &name);
     const std::string m_name;

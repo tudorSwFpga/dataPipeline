@@ -15,6 +15,7 @@ void ThreadPool::ThreadLoop(const int &id) {
             std::unique_lock<std::mutex> lock(queue_mutex);
             mutex_condition.wait(lock, [this] { return !jobs.empty() || should_terminate; });
             if (should_terminate) {
+                spdlog::debug("ThreadLoop {} terminating {}", id, job.first);
                 return;
             }
             job = jobs.front();

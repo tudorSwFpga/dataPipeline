@@ -13,6 +13,9 @@ public:
     ThreadPool(const uint32_t &nproc) : m_nproc(nproc) {
         spdlog::debug("ThreadPool ctor with {} threads", nproc);
     };
+    ~ThreadPool() {
+        spdlog::debug("ThreadPool dtor");
+    };
     void start();
     void QueueJob(const std::string &jobName, const std::function<void()> &job);
     void stop();

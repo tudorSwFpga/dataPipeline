@@ -12,6 +12,13 @@ DataManager<T> *DataManager<T>::getInstance(const DataManagerConf &conf) {
     return m_Pinstance;
 }
 
+template<class T>
+DataManager<T> *DataManager<T>::deleteInstance(const DataManagerConf &conf) {
+    std::lock_guard<std::mutex> lock(m_Mutex);
+    delete m_Pinstance;
+    m_Pinstance = nullptr;
+}
+
 /*template<class T>
 bool DataManager<T>::setConf(const uint8_t &inQueues, const uint8_t &outQueues, const MODE &mode) {
     m_maxNbInQueues  = inQueues;

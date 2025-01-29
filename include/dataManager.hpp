@@ -58,6 +58,7 @@ public:
     // get access to the instance
 
     static DataManager<T> *getInstance(const DataManagerConf &conf);
+    static DataManager<T> *deleteInstance(const DataManagerConf &conf);
 
     // define number of input/output queues and the dispatching mode
     bool setConf(const uint8_t &inQueues, const uint8_t &outQueues, const MODE &mode);

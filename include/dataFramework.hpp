@@ -30,6 +30,7 @@ public:
     }
 
     ~DataFramework() {
+        m_dataManager = DataManager<std::string>::deleteInstance(m_dataManagerConf);
         spdlog::debug(" DataFramework Dtor");
     }
 

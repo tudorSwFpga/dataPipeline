@@ -26,6 +26,9 @@ public:
     };
     ~Proxy() {
         spdlog::debug("Proxy dtor");
+        for (auto it : m_proxyNodeList) {
+            delete it;
+        }
     };
 
     enum ProxyType { TCP, UDP, CONSUMER, CUSTOM, UNKNOWN };
