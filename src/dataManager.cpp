@@ -17,6 +17,7 @@ DataManager<T> *DataManager<T>::deleteInstance(const DataManagerConf &conf) {
     std::lock_guard<std::mutex> lock(m_Mutex);
     delete m_Pinstance;
     m_Pinstance = nullptr;
+    return m_Pinstance;
 }
 
 /*template<class T>
@@ -130,7 +131,6 @@ bool DataManager<T>::setFeeder(const std::string &appId) {
                 m_inQueuesIds.emplace(std::make_pair(appId, f->second));
                 m_inQueuesIds.erase(f);
                 spdlog::debug("New Feeder: {}", appId);
-                return true;
             } else {
                 spdlog::error(" No empty place to set new Feeder " + appId);
                 return false;
@@ -140,6 +140,7 @@ bool DataManager<T>::setFeeder(const std::string &appId) {
         spdlog::error(" Feeder already existing:  " + appId);
         return false;
     }
+    return true;
 }
 
 template<class T>
@@ -159,9 +160,7 @@ bool DataManager<T>::setConsumer(const std::string &appId) {
         // initially all the map is empty
         if (m_outQueuesIds.size() < m_maxNbOutQueues) {
             m_outQueuesIds.emplace(std::make_pair(appId, m_outQueuesIds.size()));
-            // m_hasData.emplace(std::make_pair(appId,false));
             m_outQueues.emplace_back(Q<T>());
-
             spdlog::info("New Consumer " + appId);
             // but once it becomes full, we can only find place if a feeder has left
         } else {
@@ -169,8 +168,6 @@ bool DataManager<T>::setConsumer(const std::string &appId) {
             if (f != m_outQueuesIds.end()) {
                 m_outQueuesIds.emplace(std::make_pair(appId, f->second));
                 m_outQueuesIds.erase(f);
-                spdlog::info("New Consumer 2 " + appId);
-                return true;
             } else {
                 spdlog::error("No empty place to set new Consumer " + appId);
                 return false;
@@ -180,6 +177,7 @@ bool DataManager<T>::setConsumer(const std::string &appId) {
         spdlog::error("Consumer already existing: " + appId);
         return false;
     }
+    return true;
 }
 
 template<class T>

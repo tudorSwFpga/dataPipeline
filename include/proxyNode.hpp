@@ -8,7 +8,6 @@
 #include <thread>
 #include <time.h>
 #include <poll.h>
-#include <plog/Log.h>
 #include <mutex>
 #include <optional>
 #include <memory>
