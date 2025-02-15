@@ -5,10 +5,22 @@ set(THREADS_PREFER_PTHREAD_FLAG ON)
 set(CMAKE_BUILD_TYPE Debug)
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
 
-
 #TODO: at a certain point, build using installed lib
 find_package(Threads REQUIRED)
-add_subdirectory("../plog" "plog")
+find_package(spdlog REQUIRED)
+if (NOT spdlog_FOUND)
+    message(STATUS "spdlog not found, installing through apt")
+    execute_process(COMMAND sudo apt install -y libspdlog-dev)
+endif()
+
+find_package(Boost QUIET COMPONENTS property_tree)
+if (NOT Boost_PROPERTY_TREE_FOUND)
+    message(STATUS "Boost.PropertyTree not found, installing via apt...")
+    execute_process(COMMAND sudo apt install -y libboost-dev)
+endif()
+
+
+
 add_executable(testFramework test.cpp)
 target_sources(testFramework 
     PUBLIC 
@@ -21,3 +33,4 @@ target_sources(testFramework
     )
 
 target_include_directories(testFramework PUBLIC "../include")
+target_link_libraries(testFramework spdlog::spdlog)
