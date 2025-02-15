@@ -122,7 +122,7 @@ private:
 int main() {
     spdlog::set_level(spdlog::level::debug);
     // parse configuration
-    testTool test("topology.json", 5);
+    testTool test("../topology.json", 5);
     test.run();
     test.check();
     return 0;
