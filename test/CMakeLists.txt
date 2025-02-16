@@ -22,12 +22,13 @@ endif()
 
 
 add_executable(testFramework test.cpp)
-target_sources(testFramework 
-    PUBLIC 
+target_sources(testFramework
+    PUBLIC
         "../src/runnable.cpp"
         "../src/dataFramework.cpp"
         "../src/proxy.cpp"
         "../src/tcp.cpp"
+        "../src/udp.cpp"
         "../src/threadPool.cpp"
         "../include/consumer.hpp"
     )

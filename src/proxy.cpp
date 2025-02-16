@@ -9,6 +9,7 @@
 #include "../include/proxyNode.hpp"
 #include "../include/threadPool.hpp"
 #include "../include/tcp.hpp"
+#include "../include/udp.hpp"
 #include "../include/runnable.hpp"
 #include "../include/consumer.hpp"
 
@@ -19,6 +20,9 @@ bool Proxy::addNode(ProxyType type, const uint16_t &port, const std::string &nam
     switch (type) {
     case TCP:
         node = new TcpServer(name, port, m_dataHandler);
+        break;
+    case UDP:
+        node = new UdpServer(name, port, m_dataHandler);
         break;
     case CONSUMER:
         node = new Consumer(name, port, m_dataHandler);
