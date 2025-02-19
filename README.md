@@ -10,13 +10,13 @@ flowchart LR
 
 ## Architecture
 
-### Proxy 
+### Proxy
 There are 2 Proxys, one interfacing the feeders and the other interfacing the consumers.
 Each Proxy can instantiate N nodes havine therefore N node receiving data from N feeders.
-The output Proxy can instantiate M nodes and each node will be interfaced with a consumer. 
+The output Proxy can instantiate M nodes and each node will be interfaced with a consumer.
 The following Proxy node types are supported:
 * TCPServer
-* UDP 
+* UDP
 * Local file (TBD)
 * Other process (TBD)
 
@@ -81,6 +81,3 @@ flowchart LR
  id3 --> id11(Consumer 1)
  id3 --> id12(Consumer 2)
 ```
-
-
-

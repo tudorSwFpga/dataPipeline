@@ -16,7 +16,7 @@ public:
         spdlog::debug("UDP Server dtor ");
     }
     // in running state all the magic operates
-    void run() override;
+    bool run() override;
 
 private:
     const std::string m_name;
@@ -25,4 +25,23 @@ private:
     // data handler, used when receiving packets
     std::shared_ptr<DataManager<std::string>> m_dataHandler;
     int createRxSocket();
+};
+
+class UdpClient : public ProxyNode {
+public:
+    UdpClient(const std::string &name, const uint16_t& rem_port, DataManager<std::string> *dataHandler) : 
+        ProxyNode(name, rem_port, dataHandler) {
+        spdlog::debug("UDP Client ctor ");
+        createTxSocket();
+        //TODO: Better manage the return value
+    }
+    ~UdpClient() {
+        spdlog::debug("UDP Client dtor ");
+    }
+private:
+    int m_sockfd;
+    struct sockaddr_in m_address;
+    int send(const std::string &msg);
+    void createTxSocket();
+    bool run() override;
 };

@@ -32,9 +32,10 @@ int TcpServer::createListenSocket() {
     return sockfd;
 }
 
-void TcpServer::run() {
+bool TcpServer::run() {
     acceptConnectionReq();
     checkRx();
+    return true;
 }
 
 /**

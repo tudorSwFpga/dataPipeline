@@ -1,10 +1,12 @@
 #include "../include/runnable.hpp"
 
 // TODO: convert this to bool or int to return something
-void Runnable::run() {
+bool Runnable::run() {
     m_isRunning = true;
+    return true;
 }
 
-void Runnable::stop() {
+bool Runnable::stop() {
     m_isRunning = false;
+    return true;
 }
