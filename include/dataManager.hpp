@@ -85,8 +85,8 @@ public:
     // setDecoder
     // setParser
 
-    void run();
-    void stop();
+    bool run();
+    bool stop();
 
 private:
     static DataManager<T> *m_Pinstance;

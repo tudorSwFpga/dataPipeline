@@ -44,22 +44,22 @@ void Proxy::addHandler(DataManager<std::string> *handler) {
     m_dataHandler = handler;
 }
 
-void Proxy::run() {
+bool Proxy::run() {
     spdlog::set_level(spdlog::level::debug);
     // spdlog::debug("Proy::run nodes {}",m_proxyNodeList.size());
     if (m_proxyNodeList.size() == 0) {
         spdlog::error("No nodes to run");
-        //return false;
+        return false;
     }
     for (auto it : m_proxyNodeList) {
         std::function<void()> runProxy = [it]() { it->run(); };
         m_tp->QueueJob(it->m_name, runProxy);
         //spdlog::debug("Running proxy job {}",it->m_name);
     }
-    //return true;
+    return true;
 }
 
-void Proxy::stop() {
+bool Proxy::stop() {
     bool ret = true;
     for (auto it : m_proxyNodeList) {
         it->stop();

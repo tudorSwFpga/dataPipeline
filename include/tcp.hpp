@@ -35,7 +35,7 @@ public:
 
     const std::string m_name;
     // TODO: why to declare this here since it should be inherited from Runnable
-    void run() override;
+    bool run() override;
 
     std::list<std::string> getConnectedPeers();
 

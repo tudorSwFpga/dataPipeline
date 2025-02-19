@@ -38,8 +38,8 @@ public:
     bool remNode(ProxyType type, const uint16_t &port, const std::string &name);
 
     static ProxyType getProxyType(const std::string &type);
-    void run() override;
-    void stop() override;
+    bool run() override;
+    bool stop() override;
     // todo move this to private
     std::vector<ProxyNode *> m_proxyNodeList;
 

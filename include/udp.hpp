@@ -16,7 +16,7 @@ public:
         spdlog::debug("UDP Server dtor ");
     }
     // in running state all the magic operates
-    void run() override;
+    bool run() override;
 
 private:
     const std::string m_name;
@@ -43,5 +43,5 @@ private:
     struct sockaddr_in m_address;
     int send(const std::string &msg);
     void createTxSocket();
-    void run() override;
+    bool run() override;
 };

@@ -21,7 +21,7 @@ int UdpServer::createRxSocket() {
     return sockfd;
 }
 
-void UdpServer::run() {
+bool UdpServer::run() {
     char buffer[1024];
     memset(buffer, 0, sizeof(buffer));
     socklen_t addr_len = sizeof(m_Address);
@@ -33,7 +33,7 @@ void UdpServer::run() {
         //TODO push should return a bool that should be checked
         m_dataHandler->push(std::string(buffer), m_name);
     }
-    //return true;
+    return true;
 }
 
 void UdpClient::createTxSocket() {
@@ -51,7 +51,7 @@ void UdpClient::createTxSocket() {
     m_address.sin_addr.s_addr = inet_addr("127.0.0.1");
 }
 
-void UdpClient::run(){
+bool UdpClient::run(){
     std::vector<std::string> data;
     bool ret = true;
     if (m_dataHandler->pop(m_name, data)) {
@@ -64,5 +64,5 @@ void UdpClient::run(){
         }
         data.clear();
     }
-    //return ret;
+    return ret;
 }

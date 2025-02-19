@@ -34,8 +34,8 @@ public:
         spdlog::debug(" DataFramework Dtor");
     }
 
-    void stop() override;
-    void run() override;
+    bool stop() override;
+    bool run() override;
 
     void getConsumerNames(std::vector<std::string> &names);
 
