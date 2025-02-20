@@ -47,14 +47,19 @@ Once the library built, you will need to specify your pipeline's topology throug
     "mode" : "broadcast"
   },
   "inProxy" : [{
-          "type" : "TCP",
+          "type" : "TCP_Server",
           "port" : "60000",
           "name" : "TcpServer1"
       },
       {
-          "type" : "TCP",
+          "type" : "TCP_Server",
           "port" : "60001",
           "name" : "TcpServer2"
+      },
+      {
+          "type" : "UDP_Rx",
+          "port" : "60002",
+          "name" : "UdpReceiver"
       }
   ],
   "outProxy" : [{
@@ -77,6 +82,7 @@ For the example above, we can imagine having the following result, where all dat
 flowchart LR
  id1(TCP Client 1) --> id2(Proxy::TCP Server1) --> id3(Data Manager)
  id4(TCP Client 2) --> id5(Proxy::TCP Server2) --> id3(Data Manager)
+ id6(UDP Sender)   --> id7(Proxy::UDP Receiver) --> id3(Data Manager)
 
  id3 --> id11(Consumer 1)
  id3 --> id12(Consumer 2)
