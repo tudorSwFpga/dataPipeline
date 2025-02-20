@@ -1,5 +1,6 @@
 # Introduction
-The goal of this project is to propose a multi-feeder multi-consumer data management framework, able to consume data from tcp and udp peers
+The goal of this project is to propose a multi-feeder multi-consumer data management framework, able to consume data from tcp, udp (and soon other) peers.
+It is written in c++ and a topology json file is needed to describe the architecture of the pipeline
 
 ```mermaid
 flowchart LR
@@ -12,11 +13,11 @@ flowchart LR
 
 ### Proxy
 There are 2 Proxys, one interfacing the feeders and the other interfacing the consumers.
-Each Proxy can instantiate N nodes havine therefore N node receiving data from N feeders.
-The output Proxy can instantiate M nodes and each node will be interfaced with a consumer.
+The Input Proxy can instantiate N nodes, having therefore N node receiving data from N feeders.
+The output Proxy can instantiate M nodes and each node will be interfaced with a consumer that will process the data
 The following Proxy node types are supported:
-* TCPServer
-* UDP
+* TCP (Server for input proxy and Client for output proxy)
+* UDP (Receiver for input proxy and Sender for output proxy)
 * Local file (TBD)
 * Other process (TBD)
 
@@ -26,6 +27,11 @@ The data manager buffers and routes the data from the feeders to the consumers. 
 
 * Broadcast mode : every data fed at the input is broadcast to all the consumers
 * Map: a route is defined between the consumers and the feeders
+
+### Threads
+
+A thread pool is instantiated, allowing to scale the system depending on the pipeline's complexity. The number of threads in the threadpool
+is defined in the topology file.
 
 
 # Usage
