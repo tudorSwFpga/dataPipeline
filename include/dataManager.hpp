@@ -1,5 +1,4 @@
-#ifndef DATA_MANAGER_H
-#define DATA_MANAGER_H
+#pragma once
 #include "spdlog/spdlog.h"
 #include <queue>
 #include <array>
@@ -85,8 +84,8 @@ public:
     // setDecoder
     // setParser
 
-    void run();
-    void stop();
+    bool run();
+    bool stop();
 
 private:
     static DataManager<T> *m_Pinstance;
@@ -115,5 +114,3 @@ private:
 };
 
 #include "../src/dataManager.cpp"
-
-#endif

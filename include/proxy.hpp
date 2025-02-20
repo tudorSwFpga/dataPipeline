@@ -31,15 +31,15 @@ public:
         }
     };
 
-    enum ProxyType { TCP, UDP, CONSUMER, CUSTOM, UNKNOWN };
+    enum ProxyType { TCPS, TCPC, UDPRX, UDPTX, CONSUMER, CUSTOM, UNKNOWN };
 
     void addHandler(DataManager<std::string> *handler);
     bool addNode(ProxyType type, const uint16_t &port, const std::string &name);
     bool remNode(ProxyType type, const uint16_t &port, const std::string &name);
 
     static ProxyType getProxyType(const std::string &type);
-    void run() override;
-    void stop() override;
+    bool run() override;
+    bool stop() override;
     // todo move this to private
     std::vector<ProxyNode *> m_proxyNodeList;
 

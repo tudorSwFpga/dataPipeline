@@ -1,30 +1,48 @@
-#ifndef UDP_H
-#define UDP_H
+#include "spdlog/spdlog.h"
+#include "proxyNode.hpp"
+#include "dataManager.hpp"
+#include <string>
+#pragma once
 
-class UDPServer:public Runnable
-{
+class UdpServer : public ProxyNode {
 public:
-    UDPServer(uint16_t udpPort):m_udpPort(udpPort)
-    {
-        PLOG_INFO << " Creating object";
-        createSocket();
+    UdpServer(const std::string &name, const uint16_t &tcpPort, DataManager<std::string> *dataHandler) :
+        ProxyNode(name, tcpPort, dataHandler) {
+        spdlog::debug("UDP Server ctor ");
+        m_dataHandler->setFeeder(name);
+        m_sockfd = createRxSocket();
     }
-    ~UDPServer(){
-    }   
-
-    void setConf();
-    void setHandler(std::shared_ptr<DataManager<std::string>> handler);
-
-    //in running state all the magic operates
-    void run();
-
+    ~UdpServer() {
+        spdlog::debug("UDP Server dtor ");
+    }
+    // in running state all the magic operates
+    bool run() override;
+    std::string getName();
 
 private:
-
-    //data handler, used when receiving packets
-    std::shared_ptr<DataManager<std::string>> m_dataHandler;
-    
-    const uint16_t m_udpPort;
+    int m_sockfd;
+    struct sockaddr_in m_Address;
+    // data handler, used when receiving packets
+    int createRxSocket();
 };
 
-#endif
+class UdpClient : public ProxyNode {
+public:
+    UdpClient(const std::string &name, const uint16_t &rem_port, DataManager<std::string> *dataHandler) :
+        ProxyNode(name, rem_port, dataHandler) {
+        spdlog::debug("UDP Client ctor ");
+        createTxSocket();
+        // TODO: Better manage the return value
+    }
+    ~UdpClient() {
+        spdlog::debug("UDP Client dtor ");
+    }
+
+    int send(const std::string &msg);
+
+private:
+    int m_sockfd;
+    struct sockaddr_in m_address;
+    void createTxSocket();
+    bool run() override;
+};

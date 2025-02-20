@@ -45,21 +45,22 @@ void DataFramework::runJobs() {
 }
 
 // spread the jobs on N threads
-void DataFramework::run() {
+bool DataFramework::run() {
     m_threadPoolPtr->start();
     m_isRunning = true;
     m_threadPoolPtr->QueueJob("dm_run", [this]() { this->m_dataManager->run(); });
     m_outProxyPtr->run();
     m_mainThread = std::thread(&DataFramework::runJobs, this);
+    return true;
 }
 
-void DataFramework::stop() {
+bool DataFramework::stop() {
     m_isRunning = false;
-    m_dataManager->stop();
-    m_inProxyPtr->stop();
-    m_outProxyPtr->stop();
+    bool ret    = true;
+    ret         = m_dataManager->stop() && m_inProxyPtr->stop() && m_outProxyPtr->stop();
     m_mainThread.join();
     m_threadPoolPtr->stop();
+    return ret;
 }
 
 bool DataFramework::instantiateProxy(const std::string &direction) {

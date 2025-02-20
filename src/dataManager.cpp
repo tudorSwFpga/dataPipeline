@@ -45,7 +45,7 @@ void DataManager<T>::reset() {
 }
 
 template<class T>
-void DataManager<T>::run() {
+bool DataManager<T>::run() {
     isRunning_ = true;
     do {
         if (m_mode == BROADCAST) {
@@ -55,10 +55,11 @@ void DataManager<T>::run() {
         }
     } while (isRunning_);
     spdlog::debug(" DataManager stopped");
+    return true;
 }
 
 template<class T>
-void DataManager<T>::stop() {
+bool DataManager<T>::stop() {
     spdlog::debug(" DataManager stopping...");
     isRunning_ = false;
     for (auto &q : m_inQueues) {
@@ -67,6 +68,7 @@ void DataManager<T>::stop() {
     for (auto &q : m_outQueues) {
         q.stop();
     }
+    return true;
 }
 /*
 check each input queue status and copy on every output queue
@@ -78,7 +80,7 @@ void DataManager<T>::manageBroadcast() {
         broadCastList.push_back(i);
     }
     for (auto &it : m_inQueues) {
-        if (!it.empty()) {
+        if (!it.empty() && broadCastList.size() > 0) {
             spdlog::debug(" Broadcasting", it.queue.size());
             it.copy(m_outQueues, broadCastList);
         }

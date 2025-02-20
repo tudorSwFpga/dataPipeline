@@ -21,12 +21,12 @@ public:
         spdlog::debug("{} Dtor", m_name);
     }
 
-    void run() {
+    bool run() override {
         m_isRunning = true;
         std::ofstream file(m_name + ".txt");
         if (!file.is_open()) {
             spdlog::error("Failed to open file");
-            return;
+            return false;
         }
         while (m_isRunning) {
             if (m_dataHandler->pop(m_name, m_data)) {
@@ -39,10 +39,12 @@ public:
             std::this_thread::sleep_for(std::chrono::milliseconds(100));
         }
         file.close();
+        return true;
     }
 
-    void stop() {
+    bool stop() override {
         m_isRunning = false;
+        return true;
     }
 
 private:

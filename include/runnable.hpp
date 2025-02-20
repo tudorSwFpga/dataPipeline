@@ -6,8 +6,8 @@ public:
     Runnable() : m_isRunning(false) {}
     ~Runnable() {}
 
-    virtual void run();
-    virtual void stop();
+    virtual bool run();
+    virtual bool stop();
 
 protected:
     std::atomic<bool> m_isRunning;
