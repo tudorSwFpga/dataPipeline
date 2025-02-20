@@ -1,5 +1,5 @@
 # Introduction
-The goal of this project is to propose a multi-feeder multi-consumer C++ data management framework.
+The goal of this project is to propose a multi-feeder multi-consumer data management framework, able to consume data from tcp and udp peers
 
 ```mermaid
 flowchart LR
