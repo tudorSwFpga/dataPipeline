@@ -3,6 +3,7 @@
 #include "spdlog/spdlog.h"
 #include <stdexcept>
 #include "../include/dataFramework.hpp"
+#include "../include/udp.hpp"
 #include <fstream>
 #include <stdlib.h>
 
@@ -10,6 +11,13 @@
 class testTcpClient : public TcpClient {
 public:
     using TcpClient::TcpClient;
+    std::vector<std::string> data;
+    bool done;
+};
+
+class testUdpClient : public UdpClient {
+public:
+    using UdpClient::UdpClient;
     std::vector<std::string> data;
     bool done;
 };
@@ -27,14 +35,17 @@ public:
 
     void run() {
         m_framework.run();
-        std::thread clientThreads[2];
+        std::thread clientThreads[3];
         for (auto &i : {0, 1}) {
             clientThreads[i] =
                 std::thread(&testTool::spawnTCPClient, this, "client" + std::to_string(i), i, 50000 + i, 10);
         }
-        for (auto &i : {0, 1}) {
+        clientThreads[2] = std::thread(&testTool::spawnUDPClient, this, "udpClient", 2, 50002, 10);
+        for (auto &i : {0, 1, 2}) {
+            spdlog::debug("Joining client thread {}", i);
             clientThreads[i].join();
         }
+        m_framework.stop();
     };
 
     bool check() {
@@ -115,7 +126,31 @@ private:
             std::this_thread::sleep_for(std::chrono::milliseconds(100));
         }
         tcpClient->done = true;
+        spdlog::debug("tcpClient done sending ");
         tcpClient->disconnect();
+    }
+
+    void spawnUDPClient(const std::string &name, const int &id, const uint16_t &port, const int &time_sec) {
+        std::shared_ptr<testUdpClient> udpClient = std::make_shared<testUdpClient>(name, port, nullptr);
+        udpClient->done                          = false;
+        // launch UDP client thread
+        spdlog::debug("Udp client thread running");
+        auto t           = std::chrono::system_clock::now();
+        const auto t_end = t + std::chrono::seconds(time_sec);
+        int msg_cnt      = 0;
+        while (std::chrono::system_clock::now() < t_end) {
+            // const auto data = gen_random(64);
+            const std::string data = "UDPClient_" + std::to_string(id) + "_message_" + std::to_string(msg_cnt++);
+            spdlog::debug("udpClient sending " + data);
+            udpClient->send(data);
+            {
+                std::lock_guard<std::mutex> lock(m_mutex);
+                m_txData[id].push_back(data);
+            }
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        }
+        udpClient->done = true;
+        spdlog::debug("udpClient done sending ");
     }
 };
 

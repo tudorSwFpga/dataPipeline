@@ -1,18 +1,23 @@
 {
   "dataManager" : {
     "name" : "dm",
-    "threadCount" : 8,
+    "threadCount" : 5,
     "mode" : "broadcast"
   },
   "inProxy" : [{
-          "type" : "TCP",
+          "type" : "TCP_Server",
           "port" : "50000",
           "name" : "TcpServer1"
       },
       {
-          "type" : "TCP",
-          "port" : "50001",
-          "name" : "TcpServer2"
+        "type" : "TCP_Server",
+        "port" : "50001",
+        "name" : "TcpServer2"
+      },
+      {
+          "type" : "UDP_Rx",
+          "port" : "50002",
+          "name" : "UdpServer"
       }
   ],
   "outProxy" : [{
