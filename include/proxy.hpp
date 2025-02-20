@@ -31,7 +31,7 @@ public:
         }
     };
 
-    enum ProxyType { TCPS,TCPC, UDPRX,UDPTX, CONSUMER, CUSTOM, UNKNOWN };
+    enum ProxyType { TCPS, TCPC, UDPRX, UDPTX, CONSUMER, CUSTOM, UNKNOWN };
 
     void addHandler(DataManager<std::string> *handler);
     bool addNode(ProxyType type, const uint16_t &port, const std::string &name);

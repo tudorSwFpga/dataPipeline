@@ -57,7 +57,7 @@ bool DataFramework::run() {
 bool DataFramework::stop() {
     m_isRunning = false;
     bool ret    = true;
-    ret = m_dataManager->stop() && m_inProxyPtr->stop() && m_outProxyPtr->stop(); 
+    ret         = m_dataManager->stop() && m_inProxyPtr->stop() && m_outProxyPtr->stop();
     m_mainThread.join();
     m_threadPoolPtr->stop();
     return ret;

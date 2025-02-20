@@ -80,7 +80,7 @@ void DataManager<T>::manageBroadcast() {
         broadCastList.push_back(i);
     }
     for (auto &it : m_inQueues) {
-        if (!it.empty()) {
+        if (!it.empty() && broadCastList.size() > 0) {
             spdlog::debug(" Broadcasting", it.queue.size());
             it.copy(m_outQueues, broadCastList);
         }

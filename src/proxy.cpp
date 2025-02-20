@@ -13,9 +13,7 @@
 #include "../include/runnable.hpp"
 #include "../include/consumer.hpp"
 
-// tcp proxy
 bool Proxy::addNode(ProxyType type, const uint16_t &port, const std::string &name) {
-    // create tcp server
     ProxyNode *node;
     switch (type) {
     case TCPS:
@@ -54,7 +52,7 @@ bool Proxy::run() {
     for (auto it : m_proxyNodeList) {
         std::function<void()> runProxy = [it]() { it->run(); };
         m_tp->QueueJob(it->m_name, runProxy);
-        //spdlog::debug("Running proxy job {}",it->m_name);
+        // spdlog::debug("Running proxy job {}",it->m_name);
     }
     return true;
 }
@@ -62,13 +60,11 @@ bool Proxy::run() {
 bool Proxy::stop() {
     bool ret = true;
     for (auto it : m_proxyNodeList) {
-        it->stop();
-            //ret = false;
-        //}
-        // spdlog::debug("Running proxy job {}",it->m_name);
+        if (!it->stop()) {
+            ret = false;
+        }
     }
-    //return ret;
-
+    return ret;
 }
 
 Proxy::ProxyType Proxy::getProxyType(const std::string &type) {
