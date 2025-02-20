@@ -5,7 +5,6 @@
 #include <cassert>
 #include <cstdint>
 #include <cstdlib>
-#include <plog/Initializers/RollingFileInitializer.h>
 #include <time.h>
 #include <memory>
 #include <thread>
